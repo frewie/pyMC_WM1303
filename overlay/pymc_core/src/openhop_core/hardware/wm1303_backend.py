@@ -3611,6 +3611,10 @@ class WM1303Backend:
             if _snr_check < -5.0:
                 logger.debug('WM1303Backend: CRC_DISABLED noise filtered snr=%.1f (AGC settling)', _snr_check)
                 return
+        # Never dispatch CRC_ERROR packets into the mesh (corrupted payloads would
+        # be re-transmitted). Stats and packet metrics are already recorded above.
+        if _rx_stat == -1:
+            return
         try:
             freq_hz = int(float(rxpk.get('freq', 0)) * 1e6)
             datr = rxpk.get('datr', 'SF7BW125')
