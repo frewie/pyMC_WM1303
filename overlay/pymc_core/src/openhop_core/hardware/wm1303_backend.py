@@ -2658,6 +2658,18 @@ class WM1303Backend:
             except Exception:
                 _rnd_delay = 200
             self._global_tx_scheduler._tx_random_delay_max_ms = float(_rnd_delay)
+            # Apply delays.tx_delay_factor from config.yaml; without this the
+            # scheduler factor stays at its 0.0 default and the setting has no effect.
+            try:
+                import yaml as _yaml
+                with open(resolve_config_path('config.yaml')) as _f:
+                    _cfg = _yaml.safe_load(_f) or {}
+                self._global_tx_scheduler._tx_delay_factor = float(
+                    _cfg.get('delays', {}).get('tx_delay_factor', 0.0))
+            except Exception as _e:
+                logger.warning('WM1303Backend: tx_delay_factor not applied: %s', _e)
+            logger.info('WM1303Backend: GlobalTXScheduler tx_delay_factor=%.2f',
+                        self._global_tx_scheduler._tx_delay_factor)
             logger.info('WM1303Backend: GlobalTXScheduler started with %d queues '
                         '(random_delay_max=%dms)',
                         len(self._tx_queue_manager.queues), _rnd_delay)
