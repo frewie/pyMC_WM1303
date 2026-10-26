@@ -912,6 +912,14 @@ class RepeaterHandler(BaseHandler):
             packet.drop_reason = f"Max flood hops limit reached ({hop_count}/{self.max_flood_hops})"
             return None
 
+        # Equivalent of MeshCore flood.max.unscoped (0 = disabled);
+        # limits only unscoped floods, region-scoped (transport) floods are unaffected.
+        max_unscoped = self.config.get("mesh", {}).get("max_unscoped_flood_hops", 0)
+        if (max_unscoped and (packet.header & PH_ROUTE_MASK) == ROUTE_TYPE_FLOOD
+                and hop_count >= max_unscoped):
+            packet.drop_reason = f"Max unscoped flood hops reached ({hop_count}/{max_unscoped})"
+            return None
+
         # path_len encodes hop count in 6 bits (0-63); adding ourselves must not exceed 63
         if hop_count >= 63:
             packet.drop_reason = "Path hop count at maximum (63), cannot append"
