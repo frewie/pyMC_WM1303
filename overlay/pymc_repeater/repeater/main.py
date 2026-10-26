@@ -1631,6 +1631,9 @@ class RepeaterDaemon:
 
             # Route through bridge engine (rules determine which channels get advert)
             if self.bridge_engine:
+                # The bridge path bypasses dispatcher.send_packet(), so apply
+                # mesh.path_hash_mode here (otherwise own adverts use 1-byte hashes).
+                self.dispatcher._apply_default_path_hash_mode(packet)
                 raw_bytes = packet.write_to()
                 await self.bridge_engine.inject_packet("repeater", raw_bytes)
                 logger.info("Advert injected into bridge engine as repeater source")
